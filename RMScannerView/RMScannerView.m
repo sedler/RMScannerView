@@ -39,7 +39,7 @@
      selector:@selector(setScannerViewOrientation:)
      name:UIDeviceOrientationDidChangeNotification
      object:nil];
-
+    
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -170,6 +170,10 @@
     // Stop the capture session
     [self.captureSession stopRunning];
     
+    for (AVCaptureInput *input in self.captureSession.inputs) {
+        [self.captureSession removeInput:input];
+    }
+    
     // Log the stop
     if (verboseLogging) NSLog(@"[RMScannerView] Stopped capture session");
 }
@@ -261,7 +265,7 @@
     previewLayer.frame = self.layer.bounds;
     previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
     previewLayer.position = CGPointMake(CGRectGetMidX(self.layer.bounds), CGRectGetMidY(self.layer.bounds));
-    [[previewLayer connection] setVideoOrientation:((AVCaptureVideoOrientation)[[UIDevice currentDevice] orientation])];
+    [[previewLayer connection] setVideoOrientation:((AVCaptureVideoOrientation)[[UIApplication sharedApplication] statusBarOrientation])];
     if ([self.layer.sublayers containsObject:previewLayer] == NO) [self.layer addSublayer:previewLayer];
 }
 
@@ -288,7 +292,7 @@
             // Configure auto-focus for near objects
             [device setAutoFocusRangeRestriction:AVCaptureAutoFocusRangeRestrictionNear];
         }
-    
+        
         // Unlock the hardware configuration
         [device unlockForConfiguration];
     } else {
@@ -461,8 +465,41 @@
 -(void)setScannerViewOrientation:(UIDeviceOrientation)toDeviceOrientation
 {
     if (previewLayer) {
-        [[previewLayer connection] setVideoOrientation:(AVCaptureVideoOrientation)[[UIDevice currentDevice] orientation]];
+        [[previewLayer connection] setVideoOrientation:(AVCaptureVideoOrientation)[[UIApplication sharedApplication] statusBarOrientation]];
     }
 }
+
+- (void)setCameraPosition:(AVCaptureDevicePosition)position
+{
+    if(self.captureSession)
+    {
+        AVCaptureDevice *newCamera = [self cameraWithPosition:position];
+        
+        if (newCamera)
+        {
+            [self.captureSession beginConfiguration];
+            
+            AVCaptureInput* currentCameraInput = [self.captureSession.inputs objectAtIndex:0];
+            [self.captureSession removeInput:currentCameraInput];
+            
+            AVCaptureDeviceInput *newVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:newCamera
+                                                                                         error:nil];
+            [self.captureSession addInput:newVideoInput];
+            
+            [self.captureSession commitConfiguration];
+        }
+    }
+}
+
+- (AVCaptureDevice *) cameraWithPosition:(AVCaptureDevicePosition) position
+{
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    for (AVCaptureDevice *device in devices)
+    {
+        if ([device position] == position) return device;
+    }
+    return nil;
+}
+
 
 @end

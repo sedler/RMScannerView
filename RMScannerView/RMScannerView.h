@@ -52,6 +52,9 @@ NS_CLASS_AVAILABLE_IOS(7_0) @interface RMScannerView : UIView <AVCaptureMetadata
 /// The RMScannerView delegate object used to set the delegate. The delegate reports scan data, errors, and requests information from the delegate.
 @property (nonatomic, weak) IBOutlet id <RMScannerViewDelegate> delegate;
 
+/// Set the Camera Position (Front or Rear)
+@property (nonatomic, assign) AVCaptureDevicePosition cameraPosition;
+
 /** Checks if a scan session is in progress
  @return YES if a scan session is currently in progress. NO if either a scan session or a capture session are not in progress. */
 - (BOOL)isScanSessionInProgress;
