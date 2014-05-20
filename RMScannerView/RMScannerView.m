@@ -471,6 +471,8 @@
 
 - (void)setCameraPosition:(AVCaptureDevicePosition)position
 {
+    _cameraPosition = position;
+    
     if(self.captureSession)
     {
         AVCaptureDevice *newCamera = [self cameraWithPosition:position];
